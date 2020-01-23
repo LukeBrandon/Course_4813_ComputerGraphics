@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <fstream>
+
 
 #ifdef MAC
 #include <GLUT/glut.h>
@@ -21,8 +23,10 @@ using namespace std;
 
 const int AXIS_WIDTH = 50;
 const int AXIS_HEIGHT = 50;
-const int DRAWABLE_WIDTH = 450;
-const int DRAWABLE_HEIGHT = 450;
+const int DRAWABLE_WIDTH = 400;
+const int DRAWABLE_HEIGHT = 400;
+const int LINE_WIDTH = 50;
+const int POINT_WIDTH = 50;
 
 
 //---------------------------------------
@@ -35,56 +39,136 @@ void init() {
    glOrtho(0, 500, 0, 500, -1.0, 1.0);
 }
 
-void drawRectangle(int x, int y, int x2, int y2 ,int x3, int y3 ,int x4, int y4){
-   glBegin(GL_POLYGON);
-   glColor3f(1.0, 1.0, 1.0);
-   glVertex2f(x, y);
-   glVertex2f(x2, y2);
-   glVertex2f(x3, y3);
-   glVertex2f(x4, y4);
+void setColor(vector<int> data){
+   glColor3f(data[0], data[1], data[2]);
+}
+
+
+// Draws a point at position x, y with size of POINT_WIDTH
+void drawPoint(vector<int> coords){
+   glPointSize(coords[0]);
+   glBegin(GL_POINTS);
+      glVertex2f(coords[1], coords[2]);
    glEnd();
 }
 
-void drawLine(int x1, int y1, int x2, int y2){
+// Draws a line from x1, y1 to x2, y2 with width of LINE_WIDTH
+void drawLine(vector<int> coords){
+   glLineWidth(coords[0]);
    glBegin(GL_LINES);
-      glColor3f(1.0, 1.0, 1.0);
-      glVertex2f(x1,y1);
-      glVertex2f(x2,y2);
+      glVertex2f(coords[1],coords[2]);
+      glVertex2f(coords[3],coords[4]);
+   glEnd();
+}
+
+// Draws a polygon with the inputted verticies
+void drawPolygon(vector<int> coords){
+   glBegin(GL_POLYGON);
+      for(uint i = 0; i < coords.size(); i+=2){
+         glVertex2f(coords[i], coords[i+1]);
+      }
    glEnd();
 }
 
 // Draws the graph's acxies and lines
 void drawGraph(){
+   // Set color to white
+   setColor({1, 1, 1});
+   int axisLineWidth = 1;
 
-   drawLine(50,500,50,50);
-   drawLine(50,50,500,50);
+   // Draw the axies
+   drawLine({axisLineWidth, 50,50,50,450});
+   drawLine({axisLineWidth, 50,50,450,50});
 
    // Draw vertical ticks
    int yOffset = DRAWABLE_HEIGHT/10;
-   int counter = 1;
+   int counter = 0;
    while(counter <= 10){
       int y =  50 + (counter*yOffset);
-      drawLine(45, y, 500, y);
+      drawLine({axisLineWidth, 45, y, 450, y});
 
       counter++;
    }
 
    // Draw horizontal ticks
    int xOffset = DRAWABLE_HEIGHT/(10 + 1);
-   int cnt = 1;
+   int cnt = 0;
    while(cnt <= 10){
       int x =  50 + (cnt*xOffset);
-      drawLine(x, 50, x, 45);
+      drawLine({axisLineWidth, x, 50, x, 45});
 
       cnt++;
    }
 
+}
 
+// Parses the command from string back into a pair of string and vector of ints
+pair<string, vector<int>> parseCommand(string command){
+   pair<string, vector<int>> parsedCommand = {"", {}};
+   string tempString;
+
+   for(uint i = 0; i < command.length(); i++){
+
+      // If the current character is a space or this is the last char in command
+      if(command.at(i) == ' ' || i == command.length()-1){
+
+         // If the previous word ends in a character
+         if(isalpha(command.at(i-1))){
+            parsedCommand.first = tempString;
+         }
+
+         // If the previous word ends in a number
+         if(isdigit(command.at(i-1))){
+            parsedCommand.second.push_back(atoi(tempString.c_str()));
+         }
+
+      // Reset the tempString
+      tempString="";
+
+      // Otherwise add the character to the tempString
+      } else {
+         tempString += command.at(i);
+      }
+
+   }
+
+   // // Printing out parsed command
+   // cout << parsedCommand.first;
+   // for(uint i = 0; i < parsedCommand.second.size(); i++){
+   //    cout << parsedCommand.second[i] << " ";
+   // }
+
+   // cout <<endl;
+
+   return parsedCommand;
 }
 
 // Draws the data 
 void drawData(){
    // Read in command from file
+   ifstream infile;
+   infile.open("commands.txt");
+
+   string input;
+
+   // Loop through all of the commands
+   while(!infile.eof()){
+      getline(infile, input);
+
+      pair<string, vector<int>> command = parseCommand(input);
+
+      if(command.first == "set_color"){
+         setColor(command.second);
+      } else if(command.first == "draw_point"){
+         drawPoint(command.second);
+      } else if(command.first == "draw_line"){
+         drawLine(command.second);
+      } else if(command.first == "draw_polygon") {
+         drawPolygon(command.second);
+      } else {
+
+      }
+   }
 
    // Draw the commands
 
@@ -100,49 +184,6 @@ void draw() {
    drawData();
 
    glFlush();
-}
-
-
-// Returns true if the character is a a character and false if anything else
-bool isCharacter(char character){
-   if((character <= 97 && character <= 122) || (character >= 65 && character <= 90)){
-      return true;
-   }
-   return false;
-}
-
-bool isNumber(char character){
-   if(character <= 48 && character <= 57){
-      return true;
-   }
-   return false;
-}
-
-void parseCommand(string command){
-   vector<string> parsedCommand;
-   string tempString;
-
-   for(uint i = 0; i < command.length(); i++){
-
-      // Adds current character to the tempString
-      if(command.at(i) != ' '){
-         tempString += command.at(i);
-
-      // If the previous word ends in a character
-      } else if(isCharacter(command.at(i))){
-         cout << "adding string to parsed command" << endl;
-         parsedCommand.push_back(tempString);
-
-      // If the previous word ends in a number
-      } else if(isNumber(command.at(i))){
-         cout << "adding number to parsed command" << endl;
-
-      }
-
-   }
-
-   parsedCommand.push_back("draw_point");
-
 }
 
 //---------------------------------------
