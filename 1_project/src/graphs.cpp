@@ -132,14 +132,6 @@ pair<string, vector<int>> parseCommand(string command){
 
    }
 
-   // // Printing out parsed command
-   // cout << parsedCommand.first;
-   // for(uint i = 0; i < parsedCommand.second.size(); i++){
-   //    cout << parsedCommand.second[i] << " ";
-   // }
-
-   // cout <<endl;
-
    return parsedCommand;
 }
 
