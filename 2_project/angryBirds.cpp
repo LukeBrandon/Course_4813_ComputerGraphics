@@ -27,6 +27,7 @@ int brickXVelocity = 5;
 int brickYVelocity = 15;
 int clickStartX;
 int clickStartY;
+bool gravityEnabled = true;
 
 const int WINDOW_DIMENSION = 500;
 const int SCREEN_FPS = 30;
@@ -59,21 +60,25 @@ void drawBrick(){
 
 // Updates the location of the brick
 void updateBrick(){
-    // y velocity is updated due to gravity
-    brickYVelocity -= GRAVITY;
+    if(gravityEnabled)
+        brickYVelocity -= GRAVITY;  // y velocity is updated due to gravity
 
     // Bounce off the side walls
     if(brickX >= WINDOW_DIMENSION){
-        brickXVelocity *= -1;
-        brickX = WINDOW_DIMENSION;
+        brickXVelocity *= -.8;
+        brickX = WINDOW_DIMENSION-BRICK_DIMENSION-5;
     }
     if(brickX <= 0){
-        brickXVelocity *= -1;
-        brickX = 0;
+        brickXVelocity *= -.8;
+        brickX = BRICK_DIMENSION;
     }
-    if(brickY >= WINDOW_DIMENSION || brickY <= 0){
-        brickYVelocity *= -.8;
-        brickY = 0;
+    if(brickY >= WINDOW_DIMENSION){
+        brickYVelocity *= -.7;
+        brickY = WINDOW_DIMENSION - BRICK_DIMENSION;
+    }
+    if(brickY <= 0){
+        brickYVelocity *= -.7;
+        brickY = BRICK_DIMENSION;
     }
     
     // Update the location of the brick based on it's velocities
@@ -96,10 +101,10 @@ void idle() {
     // Program is idle
 }
 
-// Controls the time between screen redrawing
+// Control the Frames Per Second (FPS)
 void timer(int value){
     glutPostRedisplay();
-    glutTimerFunc(1000/SCREEN_FPS, timer, 0);
+    glutTimerFunc(1000 / SCREEN_FPS, timer, 0);
 }
 
 // Handle keyboard input
@@ -120,24 +125,37 @@ void keyboard(unsigned char key, int x, int y){
 // Handle mouse input
 void mouse(int button, int state, int x, int y){
 
-    // Save the left button state
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN){
-        cout << "Clicked at: " << x << "/" << y << endl;
-        brickX, clickStartX = x;
-        brickY, clickStartY = WINDOW_DIMENSION - y;
+        gravityEnabled = false;  // Disable gravity while user holds clicked
+
+        // Draw brick where user clicks
+        brickX = x;
+        brickY = WINDOW_DIMENSION - y;
+
+        // Remember where drag started
+        clickStartX = x;
+        clickStartY = WINDOW_DIMENSION - y;
+
+        // Set velocity to 0
         brickXVelocity = 0;
         brickYVelocity = 0;
     }
 
     if (button == GLUT_LEFT_BUTTON && state == GLUT_UP){
+        gravityEnabled = true;// Re-enable gravity when click released
+
+        // Draw the brick where the user lifts up
         brickX = x;
         brickY = WINDOW_DIMENSION - y;
-        brickXVelocity = (clickStartX - brickX) / 10;
-        brickYVelocity = (clickStartY - brickY) / 10;
+
+        // Calculate velocity based on how far pulled back
+        brickXVelocity = (clickStartX - brickX) / 5;
+        brickYVelocity = (clickStartY - brickY) / 5;
     }
 }
 
 // Handle mouse motion
+// Draw the brick as the user drags the mouse
 void mouseMotion(int x, int y){
     brickX = x;
     brickY = WINDOW_DIMENSION - y;
@@ -150,12 +168,14 @@ int main(int argc, char *argv[]) {
    glutInitWindowPosition(250, 250);
    glutInitDisplayMode (GLUT_DEPTH | GLUT_SINGLE| GLUT_RGB);
    glutCreateWindow("Square");
+
    glutDisplayFunc(draw);
    glutIdleFunc(idle);
    glutKeyboardFunc(keyboard);
    glutMouseFunc(mouse);
    glutMotionFunc(mouseMotion);
    glutTimerFunc(1000 / SCREEN_FPS, timer, 0);
+
    init();
    glutMainLoop();
    return 0;
