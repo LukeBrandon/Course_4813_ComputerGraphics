@@ -1,0 +1,10 @@
+set_color 0 0 1 
+draw_line 10 86 66 122 74 
+draw_line 10 122 74 158 90 
+draw_line 10 158 90 194 114 
+draw_line 10 194 114 230 154 
+draw_line 10 230 154 266 218 
+draw_line 10 266 218 302 322 
+draw_line 10 302 322 338 386 
+draw_line 10 338 386 374 386 
+draw_line 10 374 386 410 386 
