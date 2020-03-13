@@ -80,9 +80,9 @@ void drawBrick(){
     float hz = midz - BRICK_DIMENSION / 2;
 
     // Rotate the brick
-    glPushMatrix();
-    glRotatef(brickXRotation, brickX, brickY, brickZ);
-    glRotatef(brickYRotation, brickX, brickY, brickZ);
+        glPushMatrix();
+        glRotatef(brickXRotation, brickX, brickY, brickZ);
+        glRotatef(brickYRotation, brickX, brickY, brickZ);
 
     // Draw 6 faces
     glBegin(GL_QUADS);
