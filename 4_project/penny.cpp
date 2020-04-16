@@ -100,7 +100,6 @@ void read_images(string color_name, im_color &color_image,
         }
     }
 
-
     // Read color image
     color_image.ReadJpg(color_name.c_str());
 
